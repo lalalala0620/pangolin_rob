@@ -1,0 +1,21 @@
+{
+    "name": "services",
+    "imports": [],
+    "services": [
+        {
+            "class": "alias",
+            "typename": "Twist",
+            "service": {
+                "class": "event",
+                "type": {
+                    "class": "struct",
+                    "members": {
+                        "linear": "double",
+                        "angular": "double"
+                    }
+                }
+            }
+        }
+
+    ]
+}
