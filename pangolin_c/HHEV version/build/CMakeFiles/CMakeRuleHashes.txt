@@ -1,0 +1,6 @@
+# Hashes of file build rules.
+f10cda00a8afc3f995a8fff8a95dc02a CMakeFiles/SampleEvent_cmcg_gen_cpp
+f10cda00a8afc3f995a8fff8a95dc02a CMakeFiles/SampleEvent_cmcg_idl_generate
+f1d6c7019fb9775a8dcc11eaaa5c450b cmcg_generated/SampleEvent.cc
+3bf447b0c1679ba9a107b6c9ed1cf7e7 cmcg_generated/SampleEvent_cmcg.c
+20e0d48845299ea0459e1703fbdfc9a8 cmcg_generated/SampleEvent_cmcg.idl

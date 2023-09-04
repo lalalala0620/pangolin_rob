@@ -1,0 +1,24 @@
+{
+    "name": "sample",
+    "imports": [],
+    "services": [
+        {
+            "class": "alias",
+            "typename": "SampleEvent",
+            "service": {
+                "class": "event",
+                "type": {
+                    "class": "struct",
+                    "members": {
+                        "datetime": {
+                            "class": "array",
+                            "type": "char",
+                            "length": 256
+                        },
+                        "seqNum": "uint64"
+                    }
+                }
+            }
+        }
+    ]
+}

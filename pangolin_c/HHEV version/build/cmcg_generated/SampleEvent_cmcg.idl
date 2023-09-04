@@ -1,0 +1,22 @@
+
+
+#ifndef SAMPLE_FFFFB43A2AC0
+#define SAMPLE_FFFFB43A2AC0
+
+
+module sample
+{
+
+    struct SampleEvent {
+    long long f_ghmSessionId;
+                
+    char datetime[256];
+            uint64 seqNum;
+};
+
+
+
+
+};
+
+#endif
