@@ -1,0 +1,20 @@
+{
+    "name": "sample",
+    "imports": [],
+    "services": [
+        {
+            "class": "alias",
+            "typename": "SampleEvent",
+            "service": {
+                "class": "event",
+                "type": {
+                    "class": "struct",
+                    "members": {
+                        "linear": "double",
+                        "angular": "double"
+                    }
+                }
+            }
+        }
+    ]
+}
