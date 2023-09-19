@@ -1,0 +1,32 @@
+{
+    "name": "can_msg",
+    "imports": ["msg/header.json"],
+    "services": [
+        {
+            "class": "alias",
+            "typename": "Frame",
+            "service": {
+                "class": "event",
+                "type": {
+                    "class": "struct",
+                    "members": {
+                        "header": {
+                            "class": "ref",
+                            "type": "std_msg::Header"
+                        },
+                        "id": "uint32",
+                        "is_rtr": "bool",
+                        "is_extended": "bool",
+                        "is_error": "bool",
+                        "dlc": "uint8",
+                        "data": {
+                            "class": "array",
+                            "type": "uint8",
+                            "length": 8
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

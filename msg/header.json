@@ -1,0 +1,31 @@
+{
+    "name": "std_msg",
+    "imports": [],
+    "content": [
+        {
+            "class": "alias",
+            "typename": "Stamp",
+            "type": {
+                "class": "struct",
+                "members": {
+                    "sec": "uint32",
+                    "nanosec": "uint32"
+                }
+            }    
+        },
+        {
+            "class": "alias",
+            "typename": "Header",
+            "type": {
+                "class": "struct",
+                "members": {
+                    "stamp": {
+                        "class": "ref",
+                        "type": "std_msg::Stamp"
+                    },
+                    "frame_id": "string"
+                }
+            }    
+        }
+    ]
+}

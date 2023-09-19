@@ -1,0 +1,142 @@
+{
+    "1": {
+        "groups": [
+            {
+                "workers": 2,
+                "policy": 0,
+                "load_balance": false,
+                "runnables": {
+                    "1": {
+                        "name": "/service/DriveToCan",
+                        "path": "build/dist/lib/libDriveToCan.so",
+                        "services": {
+                            "0": {
+                                "class": "event",
+                                "role": "client",
+                                "type": "can_msgs::Frame",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/can0/can_tx",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/can_tx"
+                            },
+                            "1": {
+                                "class": "event",
+                                "role": "client",
+                                "type": "ackermann_msgs::AckermannDrive",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/ackermann_vel",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/ackermann_vel"
+                            },
+                            "2": {
+                                "class": "event",
+                                "role": "client",
+                                "type": "std_msgs::Int32",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/brake_servo",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/brake_servo"
+                            },
+                            "3": {
+                                "class": "event",
+                                "role": "client",
+                                "type": "std_msgs::Bool",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/motor_switch",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/motor_switch"
+                            },
+                            "4": {
+                                "class": "event",
+                                "role": "server",
+                                "type": "can_msgs::Frame",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/can0/can_rx",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/can_rx"
+                            }
+                            ,
+                            "5": {
+                                "class": "event",
+                                "role": "server",
+                                "type": "std_msgs::Float32",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/steering_angle",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/steering_angle"
+                            }
+                            ,
+                            "6": {
+                                "class": "event",
+                                "role": "server",
+                                "type": "std_msgs::Float32",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/rear_rpm",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/rear_rpm"
+                            }
+                            ,
+                            "7": {
+                                "class": "event",
+                                "role": "server",
+                                "type": "std_msgs::Float32",
+                                "endpoints": [
+                                    {
+                                        "type": "dds",
+                                        "config": {
+                                            "topic": "rt/driver/rear_speed",
+                                            "domain": 73
+                                        }
+                                    }
+                                ],
+                                "name": "rt/rear_speed"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
