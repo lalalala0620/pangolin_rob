@@ -37,7 +37,6 @@ public:
     {
         // Register message handlers (on() methods below)
         registerMsg<Service::State, Service &>(*this);
-        // registerMsg<Service::State, can_msgs::FrameConsumer&>(*this);
 
         registerMsg<can_msgs::Frame, can_msgs::FrameConsumer&>(*this);
         registerMsg<ackermann_msgs::AckermannDrive, ackermann_msgs::AckermannDriveConsumer&>(*this);
@@ -45,36 +44,11 @@ public:
         registerMsg<std_msgs::Bool, std_msgs::BoolConsumer&>(*this);
     }
 
-    // template <typename T>
-    // bool create_member(T member, Json configObj, int service_id)
-    // {
-    //     const auto specMsg = configObj["services"]["0"];
-    //     auto r = member.create(0, specMsg.dump().c_str());
-    //     std::cout << member << std::endl;
-    //     if (r != Result::OK)
-    //     {
-    //         ErrorLog("Create member failed");
-    //         return false;
-    //     }
-    //     if (member.start() != Result::OK)
-    //     {
-    //         ErrorLog("Start member failed");
-    //         return false;
-    //     }
-    //     return true;
-    // }
-
     // Service State
     void on(const Service::State &state, Service &service)
     {
         InfoLog("Event %s state changed to %d", service.getInstanceId(), (int)state);
     }
-
-    // void on(const Service::State& state, can_msgs::FrameConsumer& instance)
-    // {
-    //     (void)instance;
-    //     InfoLog("geometry_msgs::PointConsumer state changed to %d", (int)state);
-    // }
 
     // can callback
     void on(const can_msgs::Frame& msg, can_msgs::FrameConsumer& instance)
@@ -87,7 +61,6 @@ public:
             std_msgs::Float32 st_angle;
 
             static float str_data;
-            //printf("%d ,1 %d \n", msg.data[0], msg.data[1]);
             str_data = (float)(pow(-1, msg.data[0]) * msg.data[1]) / 180 * M_PI;
 
             st_angle.data = str_data;
@@ -155,9 +128,8 @@ public:
 
         static uint8_t steering_angle = 1;
         bool sign = (msg.steering_angle < 0);
-        steering_angle = static_cast<uint8_t>(std::abs(msg.steering_angle)/M_PI*180);
-        
-	can_frame.is_extended = false;
+        steering_angle = static_cast<uint8_t>(std::abs(msg.steering_angle)/M_PI*180);        
+	    can_frame.is_extended = false;
         can_frame.id = 0x211;
         can_frame.dlc = 2;
         can_frame.data[0] = static_cast<uint8_t>(sign);
@@ -211,23 +183,6 @@ public:
         }
 
         bool start = true;
-
-        // start = start & this->create_member(m_canReader, configObj, 0);
-        // start = start & this->create_member(m_ackerReader, configObj, 1);
-        // start = start & this->create_member(m_brakeReader, configObj, 2);
-        // start = start & this->create_member(m_switchReader, configObj, 3);
-        // start = start & this->create_member(m_canSender, configObj, 4);
-        // start = start & this->create_member(m_steeringSender, configObj, 5);
-        // start = start & this->create_member(m_rearRpmSender, configObj, 6);
-        // start = start & this->create_member(m_rearSpeedSender, configObj, 7);
-
-
-
-
-
-
-
-
 
         // Create m_canReader
         const auto specCanReader = configObj["services"]["0"];
@@ -343,13 +298,6 @@ public:
         }
 
 
-
-
-
-
-
-
-
         InfoLog("Service create %s", (start?"success":"fail"));
 
         m_Timer.reset(Millisec(100), [this]() {
@@ -364,7 +312,6 @@ public:
 
     void periodControl()
     {
-        // std::cout << m_canSendGrp.size() << std::endl; 
         for (auto msg : m_canSendGrp)
         {
             m_canSender.sendEvent(&msg);
