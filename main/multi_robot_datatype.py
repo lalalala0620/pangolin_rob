@@ -82,3 +82,31 @@ class Vector3(IdlStruct, typename="Vector3"):
 class Twist(IdlStruct, typename="Twist"):
     linear: Vector3
     angular: Vector3
+
+@dataclass
+class Joy(IdlStruct, typename="Joy"):
+    stamp_sec: uint32
+    stamp_nsec: uint32
+    frame_id: str
+    axes: List[float32]
+    buttons: List[int32]
+
+@dataclass
+class LaserScan(IdlStruct, typename="LaserScan"):
+    stamp_sec: uint32
+    stamp_nsec: uint32
+    frame_id: str
+    angle_min: float32
+    angle_max: float32
+    angle_increment: float32
+    time_increment: float32
+    scan_time: float32
+    range_min: float32
+    range_max: float32
+    ranges: List[float32]
+    intensities: List[float32]
+
+@dataclass
+class DriveStatus(IdlStruct, typename="DriveStatus"):
+    drive_status : int8 
+    message : str

@@ -62,9 +62,9 @@ class PWMServo:
     def setPulse(self, id, p, servo_run_time = 0):
         # if servo_run_time < 20:servo_run_time = 20
         # if servo_run_time > 30000:servo_run_time = 30000
-        if p < 500 or p > 2500:
-            print("Angle is out of range")
-            return False
+        # if p < 500 or p > 2500:
+        #     print("Angle is out of range")
+        #     return False
         if p < self.servo_pwm_threshold[id]['min']:p = self.servo_pwm_threshold[id]['min']
         if p > self.servo_pwm_threshold[id]['max']:p = self.servo_pwm_threshold[id]['max']
         

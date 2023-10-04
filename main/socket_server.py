@@ -2,7 +2,7 @@ import socket
 import threading
 import pickle
 import json
-# import ServoCmd 
+import ServoCmd 
 from queue import Queue
 
 def socket_thread(queue_data):
@@ -57,7 +57,7 @@ def control_thread(queue_data):
 if __name__ == "__main__":
     q = Queue()
     threads = []
-    # threads.append(threading.Thread(target = control_thread, args = (q,)))
+    threads.append(threading.Thread(target = control_thread, args = (q,)))
     threads.append(threading.Thread(target = socket_thread, args = (q,)))
     threads[0].start()
-    # threads[1].start()
+    threads[1].start()

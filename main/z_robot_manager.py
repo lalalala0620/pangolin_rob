@@ -10,16 +10,21 @@ from typing import List
 import threading
 import traceback
 import time
-from multi_robot_datatype import BatteryState, OverViewState, JointStates, UWBState, Vector3, Twist
+from multi_robot_datatype import BatteryState, Joy, OverViewState, JointStates, UWBState, Vector3, Twist, LaserScan, DriveStatus
 import socket
 import numpy as np
 import pickle
+from queue import Queue
+from zenoh import Reliability, Sample
+
+import cmath
 
 class RobotPickle():
-    def __init__(self, id ,linear, angular):
+    def __init__(self, id ,linear, angular, joy_brake):
         self.ID = id
         self.Linear = linear
         self.Angular = angular
+        self.Joy_brake = joy_brake
 
 class SocketClient():
 
@@ -31,7 +36,7 @@ class SocketClient():
         self.server_address = addr
         self.server_port = port
         self.connection_success = False
-        self.DEFAULT_LEN = 100
+        self.DEFAULT_LEN = 200
         self.force_quit = False
         self.process_thread = threading.Thread()
 
@@ -55,11 +60,12 @@ class SocketClient():
             msg_data = self.unity_socket.recv(2048)
             if len(msg_data) < self.DEFAULT_LEN:
                 self.decodeData(msg_data)
+                
                 self.robot_manager.sendRobotCMD(self.server_cmd)
     
     def decodeData(self, msg_data):
         server_data = pickle.loads(msg_data)
-        print("ID {} L_cmd {} A_cmd {} ".format(server_data.ID, server_data.Linear, server_data.Angular))
+        print("ID {} L_cmd {} A_cmd {} JOY {} ".format(server_data.ID, server_data.Linear, server_data.Angular, server_data.Joy_brake))
         self.server_cmd = server_data
 
     def getCMDInfo(self):
@@ -87,7 +93,7 @@ class PangolinState():
     
     def pubTwistCMD(self, linear_cmd, angular_cmd):
         cmd_topic = self.input_prefix + '/cmd_vel'
-        print(cmd_topic)
+        # print(cmd_topic)
         cmd = Twist(linear= Vector3(x=linear_cmd, y=0.0, z=0.0),
                     angular=Vector3(x=0.0, y=0.0, z=angular_cmd))
         self.zenoh_session.put(cmd_topic, cmd.serialize())
@@ -97,6 +103,113 @@ class PangolinState():
             self.battery_state_sub_.undeclare()
         if self.joint_state_sub_ is not None:
             self.joint_state_sub_.undeclare()
+
+
+class TurtlebotState():
+
+    def __init__(self, id, zenoh_config):
+        
+        self.id = str(id)
+        self.input_prefix = 'turtlebot' + self.id + '/rt'
+
+        self.battery_state = None
+        self.joint_state = None
+        self.battery_state_sub_ = None
+        self.joint_state_sub_ = None
+
+        self.zenoh_session = zenoh.open(zenoh_config)
+        # self.createTopicSub()
+
+    def createTopicSub(self):
+        self.battery_state_sub_ = self.zenoh_session.declare_subscriber('{}/battery_state'.format(self.input_prefix), self.batteryStateListener)
+        self.joint_state_sub_ = self.zenoh_session.declare_subscriber('{}/joint_states'.format(self.input_prefix), self.jointStateListener)
+    
+    def pubTwistCMD(self, linear_cmd, angular_cmd):
+        cmd_topic = self.input_prefix + '/cmd_vel'
+        # print(cmd_topic)
+        cmd = Twist(linear= Vector3(x=linear_cmd / 5, y=0.0, z=0.0),
+                    angular=Vector3(x=0.0, y=0.0, z=angular_cmd / 2))
+        self.zenoh_session.put(cmd_topic, cmd.serialize())
+
+    def batteryStateListener(self, sample):
+        self.battery_state = BatteryState.deserialize(sample.payload)
+        # print('[ voltage: {}, capacity: {}, percentage: {}]'.format(self.battery_state.voltage,
+        #                                 self.battery_state.capacity, self.battery_state.percentage))
+    
+    def jointStateListener(self, sample):
+        self.joint_state = JointStates.deserialize(sample.payload)
+        # print('[name: {}, velocity: {}]'.format(self.joint_state.name, self.joint_state.velocity))
+
+    def getJointState(self):
+        if self.joint_state is not None:
+            return self.joint_state
+    
+    def getBatteryState(self):
+        if self.battery_state is not None:
+            return self.battery_state
+        
+    def closeConnect(self):
+        if self.battery_state_sub_ is not None:
+            self.battery_state_sub_.undeclare()
+        if self.joint_state_sub_ is not None:
+            self.joint_state_sub_.undeclare()
+
+
+class EvpiState():
+
+    def __init__(self, id, zenoh_config):
+        
+        self.id = str(id)
+        self.input_prefix = 'evpi' + self.id + '/rt'
+
+        self.joy = None
+        self.joy_sub = None
+        self.last_cmd = Twist(linear= Vector3(x=(0.0*2 -1), y=0.0, z=0.0),
+                    angular=Vector3(x=0.0, y=0.0, z=0.0 / 2))
+
+        self.last_drive_cmd = DriveStatus(drive_status= 0, message="")
+        self.zenoh_session = zenoh.open(zenoh_config)
+        # self.createTopicSub()
+
+    # def createTopicSub(self):
+    #     self.joy_sub = self.zenoh_session.declare_subscriber('{}/joy'.format(self.input_prefix), self.joyListener)
+
+    def pubTwistCMD(self, linear_cmd, angular_cmd):
+        cmd_topic = self.input_prefix + '/cmd_vel'
+        # print(linear_cmd*2 -1)
+        
+        cmd = Twist(linear= Vector3(x=(linear_cmd*2 -1), y=0.0, z=0.0),
+                    angular=Vector3(x=0.0, y=0.0, z=angular_cmd / 2))
+        if self.last_cmd != cmd:
+            # print(self.getJoy())
+            print("12345678")
+            self.zenoh_session.put(cmd_topic, cmd.serialize())
+        self.last_cmd = cmd 
+        
+    def rqDriveStatus(self, status):
+        drive_status_topic = 'evpi' + self.id + '/rq' +'/driver/drive_statusRequest'
+        cmd = DriveStatus(drive_status=status, message="")
+        if self.last_drive_cmd != cmd:
+            print(drive_status_topic, cmd)
+            self.zenoh_session.put(drive_status_topic, cmd.serialize())
+        
+        
+
+    # def joyListener(self, sample):
+    #     self.joy = Joy.deserialize(sample.payload)
+    #     print('[name: {}, velocity: {}]'.format(self.joy.axes, self.joy.buttons))
+
+    # def getJoy(self):
+    #     if self.joy is not None:
+    #         return self.joy
+        
+    def closeConnect(self):
+        if self.battery_state_sub_ is not None:
+            self.battery_state_sub_.undeclare()
+        if self.joint_state_sub_ is not None:
+            self.joint_state_sub_.undeclare()
+
+            
 
 
 
@@ -115,6 +228,7 @@ class RobotStatusManager():
 
         self.turtlebot_list = list()
         self.pangolin_list = list()
+        self.evpi_list = list()
         self.MAX_ROBOT_NUM = robot_num
 
         # self.input_prefix_ = 'rt' #default setting
@@ -158,18 +272,31 @@ class RobotStatusManager():
         for id in range(self.MAX_ROBOT_NUM):
             # turlebot_state = TurtlebotState(id, zenoh_config= self.zenoh_config_)
             # self.turtlebot_list.append(turlebot_state)
-            pangolin_state = PangolinState(id, zenoh_config= self.zenoh_config_)
-            self.pangolin_list.append(pangolin_state)
+            # pangolin_state = PangolinState(id, zenoh_config= self.zenoh_config_)
+            # self.pangolin_list.append(pangolin_state)
+            evpi_state = EvpiState(id, zenoh_config= self.zenoh_config_)
+            self.evpi_list.append(evpi_state)
         print("Init Robot State Successful")
     
     def sendRobotCMD(self, cmd):
         if cmd is not None:
-            print("cmd                      ID {} linear {} angular {}".format(cmd.ID, cmd.Linear, cmd.Angular))
+            # print("cmd                      ID {} linear {} angular {} joy {}".format(cmd.ID, cmd.Linear, cmd.Angular, cmd.Joy_brake))
             if cmd.ID < self.MAX_ROBOT_NUM:
-                self.pangolin_list[cmd.ID].pubTwistCMD(cmd.Linear, cmd.Angular)
+                # self.pangolin_list[cmd.ID].pubTwistCMD(cmd.Linear, cmd.Angular)
+                # self.turtlebot_list[cmd.ID].pubTwistCMD(cmd.Linear, cmd.Angular)
+                self.evpi_list[cmd.ID].pubTwistCMD(cmd.Angular, cmd.Linear)
+                
+                if cmd.Joy_brake == True:
+                    print(cmd.Joy_brake)
+                    self.evpi_list[cmd.ID].rqDriveStatus(1)
+                else:
+                    self.evpi_list[cmd.ID].rqDriveStatus(2)
+                # self.evpi_list[cmd.ID].pubJoyBrake(cmd.Joy_brake)
         else:
             for id in range(self.MAX_ROBOT_NUM):
-                self.pangolin_list[id].pubTwistCMD(0, 0)
+                # self.pangolin_list[id].pubTwistCMD(0, 0)
+                # self.turtlebot_list[id].pubTwistCMD(0, 0)
+                self.evpi_list[id].pubTwistCMD(0, 0)
 
 
     def closeStatusManager(self):
@@ -182,7 +309,7 @@ class RobotStatusManager():
 
 if __name__ == "__main__":
 
-    server_ip = "192.168.100.65"
+    server_ip = "192.168.100.178"
     server_port = 8000
     manager = SocketClient(server_ip, server_port)
 
